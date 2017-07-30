@@ -1,0 +1,79 @@
+@import url('https://fonts.googleapis.com/css?family=Zilla+Slab');
+
+.indicators-home {
+   margin-top: 5em;
+
+   h1 {
+    font-family: 'Zilla Slab', serif;
+    font-weight: medium;
+   }
+}
+
+footer {
+  margin-left: 2em;
+}
+
+/*------ search box --------*/
+
+.picker {
+    .pickname {
+	.symbol {
+          float: left;
+          width: 4em;
+         }
+        .name {
+          margin: 0 0 0 1em;
+          display: inline;
+        }
+        .exchange {
+          float: right;
+	  color: #676767;
+          text-align: right;
+	  margin: 0 0 0 2em;
+        }
+    }
+
+
+    input.query {
+      display: inline-block;
+      width: 15em;
+    }
+
+    .loading {
+      display: none;
+      margin-left: 1em;
+     }
+
+    .fa-search {
+      color: #BBB;
+      margin-left: -1.5em;
+     }
+}
+
+
+/*------- charts -----------*/
+#chart {
+    height: 400px;
+    min-width: 310px;
+    max-width: 800px;
+    margin: 0 auto;
+
+    .highcharts-title {
+      font-family: 'Zilla Slab', serif;
+    }
+
+    .highcharts-axis.axis0 .highcharts-axis-line {
+      stroke: #7cb5ec;
+      fill: #7cb5ec;
+    }
+
+    .highcharts-axis.axis1 .highcharts-axis-line {
+      stroke: #666;
+      fill: #666;
+    }
+
+   .ttm {
+     fill: #90ed7d;
+     stroke: #90ed7d;
+   }
+}
