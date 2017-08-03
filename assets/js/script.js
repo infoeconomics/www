@@ -3,7 +3,7 @@ $(document).ready(init_page);
 function init_page(){
   init_selector();
   // see https://github.com/bassjobsen/Bootstrap-3-Typeahead
-  $('.typeahead').typeahead(TYPEAHEAD_OPTIONS);
+  $('.typeahead').typeahead(TYPEAHEAD);
 }
 
 
@@ -72,7 +72,7 @@ function create_chart(symbol, name, data) {
 /*------- search box ------------*/
 
 
-const TYPEAHEAD_OPTIONS =
+const TYPEAHEAD =
   {
     source: function (key, callback){
       key = key.toUpperCase();
@@ -89,7 +89,7 @@ const TYPEAHEAD_OPTIONS =
       }
       var url = 'https://s3.amazonaws.com/infoeconomics/symbols/' + path + '.txt';
       $.get(url)
-	.done(function(data) {TYPEAHEAD_OPTIONS.receive_matches(data, callback);})
+	.done(function(data) {TYPEAHEAD.receive_matches(data, callback);})
 	.fail(function(xhr, status, error){console.log('fail', 'status=', status, 'error=', error);
 					   return true;});
       return false;
@@ -97,7 +97,7 @@ const TYPEAHEAD_OPTIONS =
 
     sorter: function (items){
       var q = this.query.toUpperCase();
-      return items.sort(function(a, b){return TYPEAHEAD_OPTIONS.compare_matches(a, b, q);});
+      return items.sort(function(a, b){return TYPEAHEAD.compare_matches(a, b, q);});
     },
 
     select: function () {
@@ -130,6 +130,47 @@ const TYPEAHEAD_OPTIONS =
 	'<div class="symbol">' + item.s + "</div>" +
 	'<div class="name">' + item.n + "</div>" +
 	'<div class="exchange">' + item.e + "</div></div>";
+    },
+
+    highlighter : function(item){
+      var query = this.query;
+      if (query === ''){
+	return item;
+      }
+      var matches = item.match(/(>)([^<]*)(<)/g);
+      var src_text = [];
+      if(matches && matches.length){ // detect item is html
+	for (var i in matches) {
+	  var match = matches[i];
+	  if (match.length > 2) {  //ignore '><'
+            src_text.push(match);
+	  }
+	}
+	if (src_text.length == 3){
+	  src_text.pop(); // filter out exchange (3rd elt of src_text)
+	}
+      } else {
+	src_text.push(item); // detect item is plain text
+      }
+      // escape regex chars
+      query = query.replace((/[\(\)\/\.\*\+\?\[\]]/g), function(mat) { return '\\' + mat; });
+      var qregex = new RegExp(query, 'gi');
+      var match_txt = [];
+      for (var i in src_text){
+	var src = src_text[i];
+	var m = src.match(qregex);
+	if (m && m.length>0) {
+	  match_txt.push(src);
+	}
+      }
+      console.log('highlighter in', item);
+      for (var j in match_txt){
+	var txt = match_txt[j];
+	item = item.replace(txt, txt.replace(qregex, '<strong>$&</strong>'));
+      }
+
+      console.log('highlighter out', item);
+      return item;
     },
 
     receive_matches: function (data, callback){
@@ -182,3 +223,28 @@ const TYPEAHEAD_OPTIONS =
     }
   };
 
+
+function add_menu(){
+  var item = $('<div/>').addClass('highcharts-menu-item').text('download CSV')
+    .css({cursor: 'pointer',
+	  padding: '0.5em 1em',
+	  'font-size': '11px',
+	  transition: 'background 250ms, color 250ms'})
+    .hover(function(){ $(this).css({background: 'rgb(51, 92, 173)', color: 'rgb(255,255,255)'});},
+           function(){ $(this).css({background: 'rgb(255,255,255)', color: 'rgb(51, 51, 51)'}); })
+    .click(download_csv);
+  $('.highcharts-menu').append(item);
+}
+
+function download_csv(){
+  var data = [["name1", "city1", "some other info"], ["name2", "city2", "more info"]];
+  var csvContent = "data:text/csv;charset=utf-8,";
+  data.forEach(function(infoArray, index){
+		 dataString = infoArray.join(",");
+		 csvContent += index < data.length ? dataString+ "\n" : dataString;
+	       });
+  var encodedUri = encodeURI(csvContent);
+  var link = $('<a/>').attr({href: encodedUri, download: 'my_data.csv'});
+  $('body').append(link); // Required for FF
+  link.click();
+}

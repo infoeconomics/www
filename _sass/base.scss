@@ -53,10 +53,13 @@ footer {
 
 /*------- charts -----------*/
 #chart {
+    min-height: 400px;
+    /*
     height: 400px;
     min-width: 310px;
     max-width: 800px;
     margin: 0 auto;
+    */
 
     .highcharts-title {
       font-family: 'Zilla Slab', serif;
@@ -76,4 +79,14 @@ footer {
      fill: #90ed7d;
      stroke: #90ed7d;
    }
+}
+
+.download-csv {
+  text-align: center;
+  width: 3em;
+  font-size: 120%;
+  color: #080;
+  &:hover {
+      background-color: #DFD;
+  }
 }
