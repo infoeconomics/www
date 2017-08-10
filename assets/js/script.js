@@ -124,7 +124,7 @@ const TYPEAHEAD =
       var url = 'https://us-central1-indicators-176115.cloudfunctions.net/company/' + symbol;
       $('.indicators-home .loading').show();
       $.getJSON(url, function (data) {
-		  if ('result' in data && 'indicators' in data.result){
+		  if ('result' in data && data.result != null && 'indicators' in data.result){
 		    var indicators = data.result.indicators;
 		    update_about(data.result);
 		    create_chart(symbol, name, indicators);
