@@ -120,9 +120,18 @@ const TYPEAHEAD =
     afterSelect: function (stock){
       var symbol = stock.s;
       var name = stock.n;
-      var url = 'https://80ctb0ux5c.execute-api.us-east-1.amazonaws.com/prod/company/' + symbol;
+      //var url = 'https://80ctb0ux5c.execute-api.us-east-1.amazonaws.com/prod/company/' + symbol;
+      var url = 'https://us-central1-indicators-176115.cloudfunctions.net/company/' + symbol;
       $('.indicators-home .loading').show();
-      $.getJSON(url, function (data) { create_chart(symbol, name, data);});
+      $.getJSON(url, function (data) {
+		  if ('result' in data && 'indicators' in data.result){
+		    var indicators = data.result.indicators;
+		    update_about(data.result);
+		    create_chart(symbol, name, indicators);
+		  } else {
+		    create_chart(symbol, name, {});
+		  }
+		});
     },
 
     displayText: function (item) {
@@ -163,13 +172,10 @@ const TYPEAHEAD =
 	  match_txt.push(src);
 	}
       }
-      console.log('highlighter in', item);
       for (var j in match_txt){
 	var txt = match_txt[j];
 	item = item.replace(txt, txt.replace(qregex, '<strong>$&</strong>'));
       }
-
-      console.log('highlighter out', item);
       return item;
     },
 
@@ -223,6 +229,17 @@ const TYPEAHEAD =
     }
   };
 
+
+function update_about(data){
+  var fields = ['sector', 'industry', 'subindustry', 'exchange'];
+  var block = $('<div/>').append($('<div/>').addClass('name').text(data['company']));
+  $(fields).each(function(i, field){
+		   var row = $('<div/>').addClass('value').text(data[field])
+		     .tooltip({title: field, placement: 'left'});
+		   block.append(row);
+		 });
+  $('.about').html(block);
+}
 
 function add_menu(){
   var item = $('<div/>').addClass('highcharts-menu-item').text('download CSV')
