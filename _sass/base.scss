@@ -13,6 +13,40 @@ footer {
   margin-left: 2em;
 }
 
+nav #sign-in .user_id {
+  display: inline-block;
+}
+
+nav  .session {
+
+    button { 
+      cursor: pointer; cursor: hand;
+    }
+
+    .login_button { 
+       display: inline; 
+    }
+    div, a { display: none; }
+
+    div.user_email {
+      margin-right: 1em;
+    }
+
+    .mugshot {
+      display: inline;
+      vertical-align: middle;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background-color: #DDD;
+      background-repeat: no-repeat;
+      background-position: center center;
+      background-size: cover;
+    }
+  }
+
+
+
 /*------ search box --------*/
 
 .picker {

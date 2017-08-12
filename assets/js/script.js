@@ -129,6 +129,7 @@ const TYPEAHEAD =
 		    update_about(data.result);
 		    create_chart(symbol, name, indicators);
 		  } else {
+		    update_about(null);
 		    create_chart(symbol, name, {});
 		  }
 		});
@@ -231,6 +232,11 @@ const TYPEAHEAD =
 
 
 function update_about(data){
+  if (data == null){
+    $('.about').text('');
+    $('.tooltip').hide();
+    return null;
+  }
   var fields = ['sector', 'industry', 'subindustry', 'exchange'];
   var block = $('<div/>').append($('<div/>').addClass('name').text(data['company']));
   $(fields).each(function(i, field){
@@ -238,6 +244,7 @@ function update_about(data){
 		     .tooltip({title: field, placement: 'left'});
 		   block.append(row);
 		 });
+  $('.tooltip').hide();
   $('.about').html(block);
 }
 
