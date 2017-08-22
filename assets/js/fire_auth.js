@@ -42,10 +42,20 @@ function with_user_token(loggedinFcn, loggedoutFcn){
   var unsubscribe = auth.onAuthStateChanged(observer);
 };
 
+var USER = {  };
 
 function navbar_display_user(user){
   $('nav .dropdown').show();
-  $('nav .user_email').text(user.email).css('display', 'inline');
+  if ('email' in user && user.email != null){
+    var name = user.email;
+    if (!user.emailVerified) {
+      name += '<i class="unverified fa fa-question-circle-o"></i>';
+    }
+    $('nav .user_email').html(name).css('display', 'inline');
+    $('i.unverified').tooltip({title: 'Unverified address', placement: 'left'});
+  } else if ('phoneNumber' in user){
+    $('nav .user_email').text(user.phoneNumber).css('display', 'inline');
+  }
   $('nav .login_button').hide();
   $('nav .logout_button').css('display', 'inline');
   display_user_picture(user.photoURL);
@@ -61,7 +71,7 @@ function navbar_display_nouser(){
 }
 
 function display_user_picture(url){
-  if (typeof url != 'undefined'){
+  if (typeof url != 'undefined' && url != null){
     $('nav .mugshot').css('background-image', 'url('+url+')')
     .css('display', 'inline-block');
   }

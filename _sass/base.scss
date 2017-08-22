@@ -9,6 +9,12 @@
    }
 }
 
+.indicators-login {
+   #loading { 
+     display: none;
+   }
+}
+
 footer {
   margin-left: 2em;
 }
@@ -31,6 +37,9 @@ nav {
 
     div.user_email {
       margin-right: 1em;
+      .unverified {
+       margin-left: .5em;
+      }
     }
 
     .mugshot {
