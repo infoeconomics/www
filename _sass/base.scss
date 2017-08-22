@@ -13,11 +13,12 @@ footer {
   margin-left: 2em;
 }
 
-nav #sign-in .user_id {
-  display: inline-block;
-}
+nav {
+ &.bg-faded {
+   background-color: #F2F7F2;
+ }
 
-nav  .session {
+ .session {
 
     button { 
       cursor: pointer; cursor: hand;
@@ -44,6 +45,7 @@ nav  .session {
       background-size: cover;
     }
   }
+}
 
 
 
@@ -88,6 +90,13 @@ nav  .session {
 .about {
    .name { font-weight: bold;}
    .value {}
+}
+
+
+/*------- login err msg -----------*/
+
+#err_msg {
+   display: none;
 }
 
 /*------- charts -----------*/

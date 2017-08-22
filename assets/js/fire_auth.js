@@ -1,9 +1,24 @@
 $(document).ready(init_fireauth);
 
+
+// Initialize Firebase
+var firebase_config = {
+    apiKey: "AIzaSyBhaAJRJXox7z2J4ctx4hjfrVIr0hnuIEs",
+    authDomain: "infoeconomics-fdc81.firebaseapp.com",
+    databaseURL: "https://infoeconomics-fdc81.firebaseio.com",
+    projectId: "infoeconomics-fdc81",
+    storageBucket: "infoeconomics-fdc81.appspot.com",
+    messagingSenderId: "781990522346"
+    };
+
+
 function init_fireauth() {
+  firebase.initializeApp(firebase_config);
   $('.logout_button').click(function(){ firebase.auth().signOut();});
-  firebase.auth().onAuthStateChanged(
+  var firebase_auth = firebase.auth();
+  firebase_auth.onAuthStateChanged(
     function(user) {
+      $('#err_msg').hide();
       if (user) {
 	navbar_display_user(user);
       } else {
@@ -14,29 +29,19 @@ function init_fireauth() {
     });
 };
 
-//window.addEventListener('load', function() { initApp(); });
+function with_user_token(loggedinFcn, loggedoutFcn){
+  var auth = firebase.auth();
+  var observer = function(user) {
+    if (user == null){
+      loggedoutFcn();
+    } else {
+      user.getIdToken().then(loggedinFcn);
+      unsubscribe();
+    }
+  };
+  var unsubscribe = auth.onAuthStateChanged(observer);
+};
 
-/*
-	//var login_btn = $('<a/>').text('Login').attr('href', 'login.html').addClass('btn');
-	//$('#sign-in').html(login_btn);
-
- 	// User is signed in.
-	var displayName = user.displayName;
-	var email = user.email;
-	var emailVerified = user.emailVerified;
-	var photoURL = user.photoURL;
-	var uid = user.uid;
-	var phoneNumber = user.phoneNumber;
-	var providerData = user.providerData;
-	console.log('user', JSON.stringify(user, null, '  '));
-	user.getIdToken().then(function(accessToken) {
-				 var logout_btn = $('<button/>').text('Logout')
-						    .addClass('btn btn-link')
-						    .click(function(){ firebase.auth().signOut();});
-                                 var user_id = $('<div/>').text(email).addClass('user_id');
-				 $('#sign-in').html(user_id).append(logout_btn);
-			       });
- */
 
 function navbar_display_user(user){
   $('nav .dropdown').show();
@@ -47,6 +52,7 @@ function navbar_display_user(user){
 }
 
 function navbar_display_nouser(){
+  clear_chart();
   $('nav .dropdown').hide();
   $('nav .user_email').text('').css('display', 'none');
   $('nav .login_button').css('display', 'inline');

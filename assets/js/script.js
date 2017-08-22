@@ -1,27 +1,57 @@
 $(document).ready(init_page);
 
+var PERIOD_DEFAULT = 'auto';
+const API_URL = 'https://us-central1-indicators-176115.cloudfunctions.net';
+
 function init_page(){
-  init_selector();
   // see https://github.com/bassjobsen/Bootstrap-3-Typeahead
   $('.typeahead').typeahead(TYPEAHEAD);
 }
 
 
-STOCKS = [ 'AAPL', 'AFSI', 'ALK', 'AMGN', 'AMZN', 'ANIK', 'ANTM', 'AZO', 'BAP', 'BDL', 'C',
-	   'CIB', 'CPRT', 'DORM', 'EGOV', 'ESRX', 'FFIV', 'GIL', 'GNTX', 'GOOGL', 'HIFS', 'IBM', 'JCOM',
-	   'MCK', 'MIDD', 'NVO', 'OZRK', 'PRXL', 'RY', 'TSCO', 'ULTA', 'USNA', 'WHG', 'WINA'];
+function get_period_data(data, pref){
+  // pref='auto': returns the period (annuals or quarterly) which has the most non_null data
+  // pref='annuals': returns annual data
+  // pref='quarterly': returns quarterly data
+  var ann_years = data['annuals_years'];
+  var ann_kc = data['annuals_knowledge_capital'];
+  var ann_ip = data['annuals_info_productivity'];
+  var ann_data ={ years: ann_years, kc: ann_kc, ip: ann_ip};
 
-function init_selector(){
-  $.each(STOCKS, function(i, val){
-	   $('#tickers').append($('<option/>').attr('value', val).text(val));
-	 });
-  $('#tickers').change(function(e){ show_chart($(e.target).val()); });
+  var qrt_years = data['quarterly_years'];
+  var qrt_kc = data['quarterly_knowledge_capital'];
+  var qrt_ip = data['quarterly_info_productivity'];
+  var qrt_data = { years: qrt_years, kc: qrt_kc, ip: qrt_ip};
+  if (pref=='annuals'){
+    return ann_data;
+  } else if (pref=='quarterly'){
+    return qrt_data;
+  }
+  var ann_score = count_non_null(ann_years)+count_non_null(ann_kc)+count_non_null(ann_ip);
+  var qrt_score = count_non_null(qrt_years)+count_non_null(qrt_kc)+count_non_null(qrt_ip);
+  if (qrt_score > ann_score){
+    return qrt_data;
+  } else {
+    return ann_data;
+  }
+}
+
+function count_non_null(array){
+  // returns the count of the non_null elements of array
+  var result = 0;
+  for (var i in array){
+    if (array[i] != null){
+      result += 1;
+    }
+  }
+  return result;
 }
 
 
-
 function create_chart(symbol, name, data) {
-  var years = data['years'], ip=[], kc=[];
+  var period_data = get_period_data(data, PERIOD_DEFAULT);
+  console.log('period', period_data);
+  var years = period_data['years'], ip=[], kc=[];
   var missing = true;
   for (var i in years){
     var year = years[i];
@@ -29,14 +59,17 @@ function create_chart(symbol, name, data) {
       ip.push(['', null]);
       kc.push(['', null]);
     }
-    var ip_val = data['info_productivity'][i];
-    var kc_val = data['knowledge_capital'][i];
+    var ip_val = period_data['ip'][i];
+    var kc_val = period_data['kc'][i];
     if (ip_val || kc_val){
       missing = false;
     }
     ip.push([year, ip_val]);
     kc.push([year, kc_val]);
   }
+  console.log('years', years);
+  console.log('ip', ip);
+  console.log('kc', kc);
   var options = {
     legend: { reversed: true },
     series: [{
@@ -117,23 +150,7 @@ const TYPEAHEAD =
       return this.hide();
       },
 
-    afterSelect: function (stock){
-      var symbol = stock.s;
-      var name = stock.n;
-      //var url = 'https://80ctb0ux5c.execute-api.us-east-1.amazonaws.com/prod/company/' + symbol;
-      var url = 'https://us-central1-indicators-176115.cloudfunctions.net/company/' + symbol;
-      $('.indicators-home .loading').show();
-      $.getJSON(url, function (data) {
-		  if ('result' in data && data.result != null && 'indicators' in data.result){
-		    var indicators = data.result.indicators;
-		    update_about(data.result);
-		    create_chart(symbol, name, indicators);
-		  } else {
-		    update_about(null);
-		    create_chart(symbol, name, {});
-		  }
-		});
-    },
+    afterSelect: after_select,
 
     displayText: function (item) {
       return '<div class="pickname">'+
@@ -229,6 +246,44 @@ const TYPEAHEAD =
       }
     }
   };
+
+
+function clear_chart(){
+  update_about(null);
+  $('#chart').html(null);
+}
+
+function after_select(stock){
+  with_user_token(
+    function(token) {
+      var symbol = stock.s;
+      var name = stock.n;
+      var url = API_URL + '/company/' + symbol;
+      $('.indicators-home .loading').show();
+      var auth = "Bearer "+token;
+      $.ajax({dataType: 'json',
+	      url: url,
+	      headers: { 'Authorization' : auth },
+	      success:
+	      function (data) {
+		if ('result' in data && data.result != null && 'indicators' in data.result){
+		  var indicators = data.result.indicators;
+		  update_about(data.result);
+		  console.log('1', data.result);
+		  create_chart(symbol, name, indicators);
+		} else {
+		  update_about(null);
+		  console.log('2', data);
+		  create_chart(symbol, name, {});
+		}
+	      }});
+    },
+    function (){
+      console.error('Please log in.');
+      $('#err_msg').show();
+    }
+  );
+}
 
 
 function update_about(data){
