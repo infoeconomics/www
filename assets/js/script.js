@@ -423,13 +423,6 @@ function number_with_commas(x) {
 }
 
 function leader_title(data){
-  var result = 'Top rankings in ';
-  var metric = METRICS[data.metric];
-  result += metric;
-  /*
-  if (data.sector != 'all'){
-	result += '<div class="for_sector">sector: ' + data.sector + '</div>';
-  }*/
-  return result;
+  return 'Top rankings in ' + METRICS[data.metric];
 }
 
