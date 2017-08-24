@@ -95,6 +95,53 @@ nav {
      }
 }
 
+/*--------- leaders ---------*/
+
+.leaders {
+  select.sector {
+    margin-left: 1em;
+  }
+  .results {
+    .loading {
+      margin-top: 1em;
+      display: none;
+    }
+    h4 {
+      font-size: 120%;
+      margin-top: 1em;
+      display: none;
+      .for_sector {
+       font-size: 90%;
+       color: #555;
+       margin-top: .2em;
+       margin-bottom: 1em;
+      }
+    }
+    .table {
+      margin-top: 1em;
+      td, th {
+      padding: 0px;
+      font-weight: normal;
+      }
+     .rank {  
+       text-align: center;
+       }
+     .corp .btn {  
+       padding: 0px;
+       }
+     th.value {
+       text-align: left;
+     }
+     .value {  
+       div {
+        width: 5em;
+        text-align: right;
+         }
+       }
+    }
+  }
+}
+
 /*------- corp info -----------*/
 .about {
    .name { font-weight: bold;}

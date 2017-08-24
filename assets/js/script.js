@@ -3,9 +3,32 @@ $(document).ready(init_page);
 var PERIOD_DEFAULT = 'auto';
 const API_URL = 'https://us-central1-indicators-176115.cloudfunctions.net';
 
+var SECTORS = ['Basic Materials', 'Communication Services', 'Consumer Cyclical',
+	       'Consumer Defensive', 'Energy', 'Financial Services', 'Healthcare',
+	       'Industrials', 'Real Estate', 'Technology', 'Utilities'];
+
+var METRICS = {
+  kc: 'Knowledge Capital',
+  ip: 'Information Productivity',
+  rom: 'Return-on-Management'
+};
+
+// IncomingMessage
+// req.url
+
 function init_page(){
   // see https://github.com/bassjobsen/Bootstrap-3-Typeahead
   $('.typeahead').typeahead(TYPEAHEAD);
+  $('.leaders .metric-buttons label').click(get_leaders);
+  $('.leaders select.sector').change(get_leaders);
+  $('.leaders .metric-buttons #ip').click();
+  //var menu = $('.leaders .sector.dropdown .dropdown-menu');
+  var menu = $('select.sector');
+  $('#rom').prop('disabled', true);
+  $(SECTORS).each(function(i, sector){
+		    var item = $('<option/>').attr('value', sector).text(sector);
+		    menu.append(item);
+		  });
 }
 
 
@@ -50,7 +73,6 @@ function count_non_null(array){
 
 function create_chart(symbol, name, data) {
   var period_data = get_period_data(data, PERIOD_DEFAULT);
-  console.log('period', period_data);
   var years = period_data['years'], ip=[], kc=[];
   var missing = true;
   for (var i in years){
@@ -67,9 +89,6 @@ function create_chart(symbol, name, data) {
     ip.push([year, ip_val]);
     kc.push([year, kc_val]);
   }
-  console.log('years', years);
-  console.log('ip', ip);
-  console.log('kc', kc);
   var options = {
     legend: { reversed: true },
     series: [{
@@ -111,7 +130,7 @@ const TYPEAHEAD =
       key = key.toUpperCase();
       var path;
       if (key.length == 0){
-	console.log('error: empty key');
+	console.error('error: empty key');
 	return;
       } else if (key.length == 1){
 	path = key;
@@ -123,7 +142,7 @@ const TYPEAHEAD =
       var url = 'https://s3.amazonaws.com/infoeconomics/symbols/' + path + '.txt';
       $.get(url)
 	.done(function(data) {TYPEAHEAD.receive_matches(data, callback);})
-	.fail(function(xhr, status, error){console.log('fail', 'status=', status, 'error=', error);
+	.fail(function(xhr, status, error){console.error('fail', 'status=', status, 'error=', error);
 					   return true;});
       return false;
     },
@@ -253,6 +272,11 @@ function clear_chart(){
   $('#chart').html(null);
 }
 
+function visit_stock(stock){
+  $('.query').val(stock.s);
+  after_select(stock);
+}
+
 function after_select(stock){
   with_user_token(
     function(token) {
@@ -269,11 +293,9 @@ function after_select(stock){
 		if ('result' in data && data.result != null && 'indicators' in data.result){
 		  var indicators = data.result.indicators;
 		  update_about(data.result);
-		  console.log('1', data.result);
 		  create_chart(symbol, name, indicators);
 		} else {
 		  update_about(null);
-		  console.log('2', data);
 		  create_chart(symbol, name, {});
 		}
 	      }});
@@ -327,3 +349,87 @@ function download_csv(){
   $('body').append(link); // Required for FF
   link.click();
 }
+
+/*------ leaders ------------*/
+
+function get_leaders(e){
+  if ($(this).is('label')){
+    var metric = $(this).find('input').val();
+    var sector =  $('select.sector').val();
+  } else if ($(this).is('select')){
+    var metric = $('.leaders input[name=metric]:checked').val();
+    var sector =  $(this).val();
+  }
+  var url = API_URL + '/listings';
+  $('.leaders .loading').show();
+  $('.leaders table').hide();
+  $.ajax({dataType: 'json',
+	  data: { m: metric, s: sector },
+	  url: url,
+	  success: show_leaders
+	 });
+}
+
+function show_leaders(data){
+  var t = $('.leaders table tbody');
+  var key = data.key;
+  var title = leader_title(data);
+  $('.leaders .loading').hide();
+  $('.leaders h4').html(title);
+  t.html(null);
+  $('.leaders table').show();
+  var hrow = $('<tr/>');
+  var head = $('<thead/>').append(hrow);
+  hrow.append($('<th/>').addClass('rank').text('rank'),
+	      $('<th/>').text('company'),
+	      $('<th/>').text(METRICS[data.metric]));
+  t.append(hrow);
+  $(data.results).each(function(i, item){
+			 t.append(format_metric(i, item, key, data.metric));
+		       });
+}
+
+function format_metric(i, item, key, metric){
+  var symbol = item['symbol'];
+  var name = item['name'];
+  var value = item[key];
+  var row = $('<tr/>');
+  if (metric == 'kc'){
+    var mm = (value / 1000).toFixed(0);
+    val = '$'+number_with_commas(mm)+'M';
+  } else if (metric == 'ip'){
+    val = value.toFixed(2)+'%';
+  } else if (metric == 'rom'){
+    val = value.toFixed(2)+'%';
+  } else {
+    console.error('unknown metric: ' + metric);
+    val = '?';
+  }
+  var rank = $('<td/>').addClass('rank').text(i+1);
+  var sym = $('<td/>').addClass('corp').append($('<div/>')
+					       .addClass('btn btn-link')
+					       .text(symbol)
+					       .click(function(){
+							var stock = { s: symbol, n: name};
+							visit_stock(stock);
+						      }));
+  var vv = $('<td/>').addClass('value').append($('<div/>').text(val));
+  row.append(rank, sym, vv);
+  return row;
+}
+
+function number_with_commas(x) {
+    return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
+function leader_title(data){
+  var result = 'Top rankings in ';
+  var metric = METRICS[data.metric];
+  result += metric;
+  /*
+  if (data.sector != 'all'){
+	result += '<div class="for_sector">sector: ' + data.sector + '</div>';
+  }*/
+  return result;
+}
+
