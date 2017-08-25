@@ -117,7 +117,7 @@ function create_chart(symbol, name, data) {
   if (missing){
     options['chart'] = {plotBackgroundColor: '#EEE'};
   }
-  $('.indicators-home .loading').hide();
+  $('.indicators-home .picker .loading').hide();
   Highcharts.chart('chart', options);
 }
 
@@ -283,7 +283,7 @@ function after_select(stock){
       var symbol = stock.s;
       var name = stock.n;
       var url = API_URL + '/company/' + symbol;
-      $('.indicators-home .loading').show();
+      $('.indicators-home .picker .loading').show();
       var auth = "Bearer "+token;
       $.ajax({dataType: 'json',
 	      url: url,
@@ -362,7 +362,6 @@ function get_leaders(e){
   }
   var url = API_URL + '/listings';
   $('.leaders .loading').show();
-  $('.leaders table').hide();
   $.ajax({dataType: 'json',
 	  data: { m: metric, s: sector },
 	  url: url,

@@ -101,11 +101,14 @@ nav {
   select.sector {
     margin-left: 1em;
   }
-  .results {
-    .loading {
-      margin-top: 1em;
-      display: none;
+  .loading {
+    margin-left: 1em;
+    display: none;
+    i.fa-refresh {
+      margin-left: .5em;
     }
+  }
+  .results {
     h4 {
       font-size: 120%;
       margin-top: 1em;
