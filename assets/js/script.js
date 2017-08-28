@@ -317,7 +317,14 @@ function update_about(data){
   var fields = ['sector', 'industry', 'subindustry', 'exchange'];
   var block = $('<div/>').append($('<div/>').addClass('name').text(data['company']));
   $(fields).each(function(i, field){
-		   var row = $('<div/>').addClass('value').text(data[field])
+		   var text = data[field];
+		   if (field=='exchange'){
+		     if (text=='NAS'){
+		       text='NASDAQ';
+		     }
+		     text += ':'+data['symbol'];
+		   }
+		   var row = $('<div/>').addClass('value').text(text)
 		     .tooltip({title: field, placement: 'left'});
 		   block.append(row);
 		 });
